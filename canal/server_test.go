@@ -2,7 +2,6 @@ package canal
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"testing"
 )
 
@@ -16,15 +15,18 @@ func TestServer(t *testing.T) {
 		for {
 			if sql, ok := <-ChannelSql.ChannelSql; ok {
 				count++
-				fmt.Println("获取到sql：", count, "：", sql)
-			}
-			if count > 5 {
-				ChannelSql.Stop = true
+				fmt.Println(count, "获取到sql：", count, "：", sql)
+				if len(sql) == 0 {
+					return
+				}
+				if count > 10 {
+					// 退出消费的正确姿势
+					ChannelSql.Stop = true
+					return
+				}
 			}
 		}
 	}()
 
-	engine := gin.Default()
-	engine.Run("127.0.0.1:8888")
-
+	select {}
 }

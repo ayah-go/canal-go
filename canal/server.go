@@ -10,15 +10,20 @@ import (
 	"time"
 )
 
-type CanalChannel struct {
-	ChannelSql chan string
+type Sql struct {
+	Content string
+	Type    string
+}
+
+type Channel struct {
+	ChannelSql chan []Sql
 	Stop       bool
 }
 
-func RunCanalClient(address string, port int, username string, password string, destination string, soTimeOut int32, idleTimeOut int32, regex string) *CanalChannel {
+func RunCanalClient(address string, port int, username string, password string, destination string, soTimeOut int32, idleTimeOut int32, regex string) *Channel {
 
-	result := &CanalChannel{
-		ChannelSql: make(chan string),
+	result := &Channel{
+		ChannelSql: make(chan []Sql),
 		Stop:       false,
 	}
 	go func() {
@@ -54,16 +59,19 @@ func RunCanalClient(address string, port int, username string, password string, 
 				//fmt.Println("===没有数据了===")
 				continue
 			}
-			sql := GetSql(message.Entries)
-			result.ChannelSql <- sql
+			sqls := GetSql(message.Entries)
+			if len(sqls) == 0 {
+				continue
+			}
+			result.ChannelSql <- sqls
 		}
 	}()
 
 	return result
 }
 
-func GetSql(entrys []pbe.Entry) string {
-	sql := ""
+func GetSql(entrys []pbe.Entry) []Sql {
+	var sqls []Sql
 	for _, entry := range entrys {
 		if entry.GetEntryType() == pbe.EntryType_TRANSACTIONBEGIN || entry.GetEntryType() == pbe.EntryType_TRANSACTIONEND {
 			continue
@@ -71,8 +79,8 @@ func GetSql(entrys []pbe.Entry) string {
 		rowChange := new(pbe.RowChange)
 		err := proto.Unmarshal(entry.GetStoreValue(), rowChange)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-			os.Exit(1)
+			fmt.Println("出现异常", err)
+			return nil
 		}
 		eventType := rowChange.GetEventType()
 		header := entry.GetHeader()
@@ -87,7 +95,8 @@ func GetSql(entrys []pbe.Entry) string {
 						break
 					}
 				}
-				rowChange.Sql += fmt.Sprintf("DELETE FROM `%s`.`%s` WHERE %s = %s ;\n", header.GetSchemaName(), header.GetTableName(), keyColName, keyColValue)
+				tempSql := fmt.Sprintf("DELETE FROM `%s`.`%s` WHERE %s = %s ;\n", header.GetSchemaName(), header.GetTableName(), keyColName, keyColValue)
+				sqls = append(sqls, Sql{Content: tempSql, Type: "DELETE"})
 			} else if eventType == pbe.EventType_INSERT {
 				colName := ""
 				colValue := ""
@@ -101,7 +110,8 @@ func GetSql(entrys []pbe.Entry) string {
 					}
 				}
 				tempSql := fmt.Sprintf("INSERT INTO  `%s`.`%s` (%s) VALUES (%s)  ;\n", header.GetSchemaName(), header.GetTableName(), colName, colValue)
-				rowChange.Sql += tempSql
+				sqls = append(sqls, Sql{Content: tempSql, Type: "INSERT"})
+				//rowChange.Sql += tempSql
 			} else if eventType == pbe.EventType_UPDATE {
 				colChange := ""
 				keyColName := ""
@@ -112,16 +122,20 @@ func GetSql(entrys []pbe.Entry) string {
 					}
 					if col.IsKey {
 						keyColName = "`" + col.Name + "`"
+						keyColValue = "'" + col.Value + "'"
 					}
 				}
 				colChange = colChange[0 : len(colChange)-1]
 				tempSql := fmt.Sprintf("UPDATE `%s`.`%s` SET %s WHERE %s=%s ;\n", header.GetSchemaName(), header.GetTableName(), colChange, keyColName, keyColValue)
-				rowChange.Sql += tempSql
+				//rowChange.Sql += tempSql
+				sqls = append(sqls, Sql{Content: tempSql, Type: "UPDATE"})
 			} else {
 
 			}
 		}
-		sql += rowChange.Sql
+		if rowChange.Sql != "" {
+			sqls = append(sqls, Sql{Content: rowChange.Sql, Type: "ALTER"})
+		}
 	}
-	return sql
+	return sqls
 }
