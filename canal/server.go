@@ -159,7 +159,7 @@ func GetSql(entrys []pbe.Entry) []Sql {
 			}
 		}
 		if rowChange.Sql != "" {
-			sqls = append(sqls, Sql{Content: rowChange.Sql, Type: "ALTER"})
+			sqls = append(sqls, Sql{Content: rowChange.Sql + ";\n", Type: "ALTER"})
 		}
 	}
 	return sqls
