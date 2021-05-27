@@ -14,6 +14,7 @@ import (
 type Sql struct {
 	Content string
 	Type    string
+	Insert  string
 }
 
 type Channel struct {
@@ -153,7 +154,10 @@ func GetSql(entrys []pbe.Entry) []Sql {
 					keyColName, keyColValue, _, _, _ = FormatSql(rowData.GetBeforeColumns(), true)
 				}
 				tempSql := fmt.Sprintf("UPDATE `%s`.`%s` SET %s WHERE %s=%s ;\n", header.GetSchemaName(), header.GetTableName(), colChange, keyColName, keyColValue)
-				sqls = append(sqls, Sql{Content: tempSql, Type: "UPDATE"})
+				// 同时给出insert语句
+				_, _, colNames, colValues, _ := FormatSql(rowData.GetAfterColumns(), false)
+				insertSql := fmt.Sprintf("INSERT INTO  `%s`.`%s` (%s) VALUES (%s)  ;\n", header.GetSchemaName(), header.GetTableName(), colNames, colValues)
+				sqls = append(sqls, Sql{Content: tempSql, Insert: insertSql, Type: "UPDATE"})
 			} else {
 
 			}
