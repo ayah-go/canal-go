@@ -3,4 +3,4 @@ language: go
 go:
   - "1.14.x"
 
-go_import_path: github.com/ayah/canal-go
+go_import_path: github.com/ayah-go/canal-go

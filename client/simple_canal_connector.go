@@ -21,13 +21,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	pb "github.com/ayah/canal-go/protocol"
+	pb "github.com/ayah-go/canal-go/protocol"
 	"io"
 	"net"
 	"strconv"
 	"sync"
 
-	pbp "github.com/ayah/canal-go/protocol/packet"
+	pbp "github.com/ayah-go/canal-go/protocol/packet"
 
 	"github.com/golang/protobuf/proto"
 )

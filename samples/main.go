@@ -24,8 +24,8 @@ package main
 //	"os"
 //	"time"
 //
-//	"github.com/ayah/canal-go/client"
-//	pbe "github.com/ayah/canal-go/protocol/entry"
+//	"github.com/ayah-go/canal-go/client"
+//	pbe "github.com/ayah-go/canal-go/protocol/entry"
 //	"github.com/golang/protobuf/proto"
 //)
 //

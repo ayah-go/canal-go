@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/ayah-go/canal-go/client"
+	pbe "github.com/ayah-go/canal-go/protocol/entry"
 	"github.com/ayah-go/go-util/util/logger"
-	"github.com/ayah/canal-go/client"
-	pbe "github.com/ayah/canal-go/protocol/entry"
 	"github.com/gogo/protobuf/proto"
 	"os"
 	"time"

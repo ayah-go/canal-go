@@ -19,8 +19,8 @@ package protocol
 import (
 	"errors"
 	"fmt"
-	pbe "github.com/ayah/canal-go/protocol/entry"
-	pbp "github.com/ayah/canal-go/protocol/packet"
+	pbe "github.com/ayah-go/canal-go/protocol/entry"
+	pbp "github.com/ayah-go/canal-go/protocol/packet"
 	"github.com/gogo/protobuf/proto"
 )
 

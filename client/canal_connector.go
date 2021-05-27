@@ -16,7 +16,7 @@
 
 package client
 
-import pb "github.com/ayah/canal-go/protocol"
+import pb "github.com/ayah-go/canal-go/protocol"
 
 type CanalConnector interface {
 	Connect() error
