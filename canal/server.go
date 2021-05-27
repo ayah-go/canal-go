@@ -83,8 +83,14 @@ FormatColValue 格式化列数据 除去int bit类型的都要使用单引号包
 */
 func FormatColValue(col *pbe.Column) string {
 	if strings.Index(col.MysqlType, "int") > -1 || strings.Index(col.MysqlType, "bit") > -1 {
+		if col.Value == "" {
+			return "null"
+		}
 		return col.Value
 	} else {
+		if col.Value == "" {
+			return "null"
+		}
 		return "'" + col.Value + "'"
 	}
 }

@@ -16,11 +16,6 @@ func TestServer(t *testing.T) {
 			if sql, ok := <-ChannelSql.ChannelSql; ok {
 				count++
 				fmt.Println(count, "获取到sql：", count, "：", sql)
-				for _, s := range sql {
-					if s.Type == "UPDATE" {
-						return
-					}
-				}
 			}
 		}
 	}()
