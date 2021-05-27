@@ -19,11 +19,6 @@ func TestServer(t *testing.T) {
 				if len(sql) == 0 {
 					return
 				}
-				if count > 10 {
-					// 退出消费的正确姿势
-					ChannelSql.Stop = true
-					return
-				}
 			}
 		}
 	}()

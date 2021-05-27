@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -70,6 +71,50 @@ func RunCanalClient(address string, port int, username string, password string, 
 	return result
 }
 
+/*
+FormatColName 格式化列名 使用反引号包围
+*/
+func FormatColName(col *pbe.Column) string {
+	return "`" + col.Name + "`"
+}
+
+/*
+FormatColValue 格式化列数据 除去int bit类型的都要使用单引号包围
+*/
+func FormatColValue(col *pbe.Column) string {
+	if strings.Index(col.MysqlType, "int") > -1 || strings.Index(col.MysqlType, "bit") > -1 {
+		return col.Value
+	} else {
+		return "'" + col.Value + "'"
+	}
+}
+
+func FormatSql(cols []*pbe.Column, isUpdate bool) (keyColName string, keyColValue string, colNames string, colValues string, updateChanges string) {
+	for index, col := range cols {
+		if col.IsKey {
+			keyColName = FormatColName(col)
+			keyColValue = FormatColValue(col)
+		}
+		if index != len(cols)-1 {
+			colNames += FormatColName(col) + ","
+			colValues += FormatColValue(col) + ","
+			if isUpdate {
+				// 更新需要拼接为 col=value,
+				updateChanges = FormatColName(col) + "=" + FormatColValue(col) + ","
+			}
+		} else {
+			colNames += FormatColName(col)
+			colValues += FormatColValue(col)
+			if isUpdate {
+				// 更新需要拼接为 col=value
+				updateChanges = FormatColName(col) + "=" + FormatColValue(col)
+			}
+		}
+
+	}
+	return
+}
+
 func GetSql(entrys []pbe.Entry) []Sql {
 	var sqls []Sql
 	for _, entry := range entrys {
@@ -86,48 +131,19 @@ func GetSql(entrys []pbe.Entry) []Sql {
 		header := entry.GetHeader()
 		for _, rowData := range rowChange.GetRowDatas() {
 			if eventType == pbe.EventType_DELETE {
-				keyColName := ""
-				keyColValue := ""
-				for _, col := range rowData.GetBeforeColumns() {
-					if col.IsKey {
-						keyColName = "`" + col.Name + "`"
-						keyColValue = "'" + col.Value + "'"
-						break
-					}
-				}
+				// 删除
+				keyColName, keyColValue, _, _, _ := FormatSql(rowData.GetBeforeColumns(), false)
 				tempSql := fmt.Sprintf("DELETE FROM `%s`.`%s` WHERE %s = %s ;\n", header.GetSchemaName(), header.GetTableName(), keyColName, keyColValue)
 				sqls = append(sqls, Sql{Content: tempSql, Type: "DELETE"})
 			} else if eventType == pbe.EventType_INSERT {
-				colName := ""
-				colValue := ""
-				for index, col := range rowData.GetAfterColumns() {
-					if index != len(rowData.GetAfterColumns())-1 {
-						colName += "`" + col.Name + "`" + ","
-						colValue += "'" + col.Value + "'" + ","
-					} else {
-						colName += col.Name
-						colValue += "'" + col.Value + "'"
-					}
-				}
-				tempSql := fmt.Sprintf("INSERT INTO  `%s`.`%s` (%s) VALUES (%s)  ;\n", header.GetSchemaName(), header.GetTableName(), colName, colValue)
+				// 插入
+				_, _, colNames, colValues, _ := FormatSql(rowData.GetAfterColumns(), false)
+				tempSql := fmt.Sprintf("INSERT INTO  `%s`.`%s` (%s) VALUES (%s)  ;\n", header.GetSchemaName(), header.GetTableName(), colNames, colValues)
 				sqls = append(sqls, Sql{Content: tempSql, Type: "INSERT"})
-				//rowChange.Sql += tempSql
 			} else if eventType == pbe.EventType_UPDATE {
-				colChange := ""
-				keyColName := ""
-				keyColValue := ""
-				for _, col := range rowData.GetAfterColumns() {
-					if col.Updated {
-						colChange += "`" + col.Name + "`" + "=" + "'" + col.Value + "'" + ","
-					}
-					if col.IsKey {
-						keyColName = "`" + col.Name + "`"
-						keyColValue = "'" + col.Value + "'"
-					}
-				}
-				colChange = colChange[0 : len(colChange)-1]
+				// 更新
+				keyColName, keyColValue, _, _, colChange := FormatSql(rowData.GetAfterColumns(), true)
 				tempSql := fmt.Sprintf("UPDATE `%s`.`%s` SET %s WHERE %s=%s ;\n", header.GetSchemaName(), header.GetTableName(), colChange, keyColName, keyColValue)
-				//rowChange.Sql += tempSql
 				sqls = append(sqls, Sql{Content: tempSql, Type: "UPDATE"})
 			} else {
 
