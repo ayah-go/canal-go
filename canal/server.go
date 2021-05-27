@@ -156,7 +156,7 @@ func GetSql(entrys []pbe.Entry) []Sql {
 				tempSql := fmt.Sprintf("UPDATE `%s`.`%s` SET %s WHERE %s=%s ;\n", header.GetSchemaName(), header.GetTableName(), colChange, keyColName, keyColValue)
 				// 同时给出insert语句
 				_, _, colNames, colValues, _ := FormatSql(rowData.GetAfterColumns(), false)
-				insertSql := fmt.Sprintf("INSERT INTO  `%s`.`%s` (%s) VALUES (%s)  ;\n", header.GetSchemaName(), header.GetTableName(), colNames, colValues)
+				insertSql := fmt.Sprintf("INSERT INTO  `%s`.`%s` (%s) VALUES (%s)  ;\n", header.GetSchemaName(), header.GetTableName(), keyColName+","+colNames, keyColValue+","+colValues)
 				sqls = append(sqls, Sql{Content: tempSql, Insert: insertSql, Type: "UPDATE"})
 			} else {
 
