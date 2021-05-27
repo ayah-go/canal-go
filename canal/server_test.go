@@ -1,4 +1,4 @@
-package main
+package canal
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 
 func TestServer(t *testing.T) {
 
-	ChannelSql := StartCanal("127.0.0.1", 11111, "", "", "example", 60000, 60*60*1000, ".*")
+	ChannelSql := RunCanalClient("127.0.0.1", 11111, "", "", "example", 60000, 60*60*1000, ".*")
 	// 启动消费
 	count := 0
 

@@ -1,4 +1,4 @@
-package main
+package canal
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ type CanalChannel struct {
 	Stop       bool
 }
 
-func StartCanal(address string, port int, username string, password string, destination string, soTimeOut int32, idleTimeOut int32, regex string) *CanalChannel {
+func RunCanalClient(address string, port int, username string, password string, destination string, soTimeOut int32, idleTimeOut int32, regex string) *CanalChannel {
 
 	result := &CanalChannel{
 		ChannelSql: make(chan string),
@@ -70,7 +70,10 @@ func GetSql(entrys []pbe.Entry) string {
 		}
 		rowChange := new(pbe.RowChange)
 		err := proto.Unmarshal(entry.GetStoreValue(), rowChange)
-		checkError(err)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
+			os.Exit(1)
+		}
 		eventType := rowChange.GetEventType()
 		header := entry.GetHeader()
 		for _, rowData := range rowChange.GetRowDatas() {
