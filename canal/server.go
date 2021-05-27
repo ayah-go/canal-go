@@ -98,16 +98,16 @@ func FormatSql(cols []*pbe.Column, isUpdate bool) (keyColName string, keyColValu
 		if index != len(cols)-1 {
 			colNames += FormatColName(col) + ","
 			colValues += FormatColValue(col) + ","
-			if isUpdate {
+			if isUpdate && col.Updated {
 				// 更新需要拼接为 col=value,
-				updateChanges = FormatColName(col) + "=" + FormatColValue(col) + ","
+				updateChanges += FormatColName(col) + "=" + FormatColValue(col) + ","
 			}
 		} else {
 			colNames += FormatColName(col)
 			colValues += FormatColValue(col)
-			if isUpdate {
+			if isUpdate && col.Updated {
 				// 更新需要拼接为 col=value
-				updateChanges = FormatColName(col) + "=" + FormatColValue(col)
+				updateChanges += FormatColName(col) + "=" + FormatColValue(col)
 			}
 		}
 
@@ -143,6 +143,9 @@ func GetSql(entrys []pbe.Entry) []Sql {
 			} else if eventType == pbe.EventType_UPDATE {
 				// 更新
 				keyColName, keyColValue, _, _, colChange := FormatSql(rowData.GetAfterColumns(), true)
+				if keyColName == "" || keyColValue == "" {
+					keyColName, keyColValue, _, _, _ = FormatSql(rowData.GetBeforeColumns(), true)
+				}
 				tempSql := fmt.Sprintf("UPDATE `%s`.`%s` SET %s WHERE %s=%s ;\n", header.GetSchemaName(), header.GetTableName(), colChange, keyColName, keyColValue)
 				sqls = append(sqls, Sql{Content: tempSql, Type: "UPDATE"})
 			} else {
