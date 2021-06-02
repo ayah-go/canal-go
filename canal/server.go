@@ -52,8 +52,9 @@ func RunCanalClient(address string, port int, username string, password string, 
 			}
 			message, err := connector.Get(100, nil, nil)
 			if err != nil {
-				log.Println(err)
-				os.Exit(1)
+				log.Println("canal连接失败：", err)
+				//os.Exit(1)
+				return
 			}
 			batchId := message.Id
 			if batchId == -1 || len(message.Entries) <= 0 {
