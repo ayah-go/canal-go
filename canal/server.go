@@ -6,7 +6,6 @@ import (
 	pbe "github.com/ayah-go/canal-go/protocol/entry"
 	"github.com/golang/protobuf/proto"
 	"log"
-	"os"
 	"strings"
 	"time"
 )
@@ -36,15 +35,21 @@ func RunCanalClient(address string, port int, username string, password string, 
 		connector := client.NewSimpleCanalConnector(address, port, username, password, destination, soTimeOut, idleTimeOut)
 		err := connector.Connect()
 		if err != nil {
-			log.Println(err)
-			os.Exit(1)
+			//log.Println(err)
+			log.Println("canal连接失败：", err)
+			//os.Exit(1)
+			return
 		}
+		log.Println("canal连接成功")
 		// filter
 		err = connector.Subscribe(regex)
 		if err != nil {
-			log.Println(err)
-			os.Exit(1)
+			//log.Println(err)
+			log.Println("canal订阅失败：", err)
+			//os.Exit(1)
+			return
 		}
+		log.Println("canal订阅成功")
 		// 阻塞
 		for {
 			if result.Stop {
@@ -52,11 +57,10 @@ func RunCanalClient(address string, port int, username string, password string, 
 			}
 			message, err := connector.Get(100, nil, nil)
 			if err != nil {
-				log.Println("canal连接失败：", err)
+				log.Println("canal get获取失败：", err)
 				//os.Exit(1)
 				return
 			}
-			log.Println("canal连接成功")
 			batchId := message.Id
 			if batchId == -1 || len(message.Entries) <= 0 {
 				time.Sleep(300 * time.Millisecond)
