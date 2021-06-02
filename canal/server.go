@@ -56,6 +56,7 @@ func RunCanalClient(address string, port int, username string, password string, 
 				//os.Exit(1)
 				return
 			}
+			log.Println("canal连接成功")
 			batchId := message.Id
 			if batchId == -1 || len(message.Entries) <= 0 {
 				time.Sleep(300 * time.Millisecond)
