@@ -168,8 +168,16 @@ func GetSql(entrys []pbe.Entry) []Sql {
 
 			}
 		}
-		if rowChange.Sql != "" {
-			sqls = append(sqls, Sql{Content: rowChange.Sql + ";\n", Type: "ALTER"})
+		if rowChange.Sql != "" && strings.Contains(strings.ToLower(rowChange.Sql), "alter") {
+			if strings.Contains(rowChange.Sql, "`.`") {
+				// 自带库名
+				sqls = append(sqls, Sql{Content: rowChange.Sql + ";\n", Type: "ALTER"})
+			} else {
+				// 需要手动替换库名
+				tableName := strings.Split(strings.Split(rowChange.Sql, "alter table ")[1], " ")[0]
+				replaceSql := strings.Replace(rowChange.Sql, "alter table "+tableName, "alter table `"+header.SchemaName+"`"+".`"+header.TableName+"`", 1)
+				sqls = append(sqls, Sql{Content: replaceSql + ";\n", Type: "ALTER"})
+			}
 		}
 	}
 	return sqls
