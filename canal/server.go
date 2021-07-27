@@ -53,6 +53,7 @@ func RunCanalClient(address string, port int, username string, password string, 
 		// 阻塞
 		for {
 			if result.Stop {
+				log.Println("canal Stop")
 				break
 			}
 			message, err := connector.Get(100, nil, nil)
@@ -64,13 +65,15 @@ func RunCanalClient(address string, port int, username string, password string, 
 			batchId := message.Id
 			if batchId == -1 || len(message.Entries) <= 0 {
 				time.Sleep(300 * time.Millisecond)
-				//fmt.Println("===没有数据了===")
+				log.Println("canal no sql data...")
 				continue
 			}
 			sqls := GetSql(message.Entries)
+			log.Println("canal get sqls, len is ", len(sqls))
 			if len(sqls) == 0 {
 				continue
 			}
+			log.Println("canal put sqls to channel", sqls)
 			result.ChannelSql <- sqls
 		}
 	}()
