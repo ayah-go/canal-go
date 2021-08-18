@@ -106,6 +106,7 @@ func FormatColValue(col *pbe.Column) string {
 }
 
 func FormatSql(cols []*pbe.Column, isUpdate bool) (keyColName string, keyColValue string, colNames string, colValues string, updateChanges string) {
+	log.Println(cols)
 	for index, col := range cols {
 		if col.IsKey {
 			keyColName = FormatColName(col)
