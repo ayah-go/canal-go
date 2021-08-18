@@ -111,23 +111,26 @@ func FormatSql(cols []*pbe.Column, isUpdate bool) (keyColName string, keyColValu
 		if col.IsKey {
 			keyColName = FormatColName(col)
 			keyColValue = FormatColValue(col)
-		}
-		if index != len(cols)-1 {
-			colNames += FormatColName(col) + ","
-			colValues += FormatColValue(col) + ","
-			if isUpdate && col.Updated {
-				// 更新需要拼接为 col=value,
-				updateChanges += FormatColName(col) + "=" + FormatColValue(col) + ","
-			}
 		} else {
-			colNames += FormatColName(col)
-			colValues += FormatColValue(col)
-			if isUpdate && col.Updated {
-				// 更新需要拼接为 col=value
-				updateChanges += FormatColName(col) + "=" + FormatColValue(col)
+			if index != len(cols)-1 {
+				colNames += FormatColName(col) + ","
+				colValues += FormatColValue(col) + ","
+				if isUpdate && col.Updated {
+					// 更新需要拼接为 col=value,
+					updateChanges += FormatColName(col) + "=" + FormatColValue(col) + ","
+				}
+			} else {
+				colNames += FormatColName(col)
+				colValues += FormatColValue(col)
+				if isUpdate && col.Updated {
+					// 更新需要拼接为 col=value
+					updateChanges += FormatColName(col) + "=" + FormatColValue(col)
+				}
 			}
 		}
-
+	}
+	if strings.HasSuffix(updateChanges, ",") {
+		updateChanges = updateChanges[:len(updateChanges)-len(",")]
 	}
 	return
 }
