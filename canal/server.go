@@ -111,21 +111,20 @@ func FormatSql(cols []*pbe.Column, isUpdate bool) (keyColName string, keyColValu
 		if col.IsKey {
 			keyColName = FormatColName(col)
 			keyColValue = FormatColValue(col)
+		}
+		if index != len(cols)-1 {
+			colNames += FormatColName(col) + ","
+			colValues += FormatColValue(col) + ","
+			if isUpdate && col.Updated {
+				// 更新需要拼接为 col=value,
+				updateChanges += FormatColName(col) + "=" + FormatColValue(col) + ","
+			}
 		} else {
-			if index != len(cols)-1 {
-				colNames += FormatColName(col) + ","
-				colValues += FormatColValue(col) + ","
-				if isUpdate && col.Updated {
-					// 更新需要拼接为 col=value,
-					updateChanges += FormatColName(col) + "=" + FormatColValue(col) + ","
-				}
-			} else {
-				colNames += FormatColName(col)
-				colValues += FormatColValue(col)
-				if isUpdate && col.Updated {
-					// 更新需要拼接为 col=value
-					updateChanges += FormatColName(col) + "=" + FormatColValue(col)
-				}
+			colNames += FormatColName(col)
+			colValues += FormatColValue(col)
+			if isUpdate && col.Updated {
+				// 更新需要拼接为 col=value
+				updateChanges += FormatColName(col) + "=" + FormatColValue(col)
 			}
 		}
 	}
@@ -169,7 +168,7 @@ func GetSql(entrys []pbe.Entry) []Sql {
 				tempSql := fmt.Sprintf("UPDATE `%s`.`%s` SET %s WHERE %s=%s ;\n", header.GetSchemaName(), header.GetTableName(), colChange, keyColName, keyColValue)
 				// 同时给出insert语句
 				_, _, colNames, colValues, _ := FormatSql(rowData.GetAfterColumns(), false)
-				insertSql := fmt.Sprintf("INSERT INTO  `%s`.`%s` (%s) VALUES (%s)  ;\n", header.GetSchemaName(), header.GetTableName(), keyColName+","+colNames, keyColValue+","+colValues)
+				insertSql := fmt.Sprintf("INSERT INTO  `%s`.`%s` (%s) VALUES (%s)  ;\n", header.GetSchemaName(), header.GetTableName(), colNames, colValues)
 				sqls = append(sqls, Sql{Content: tempSql, Insert: insertSql, Type: "UPDATE"})
 			} else {
 
